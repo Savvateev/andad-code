@@ -32,24 +32,14 @@ private val empty = Post(
 
 private val noPhoto = PhotoModel()
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class PostViewModel @Inject constructor(
     private val repository: PostRepository,
-    auth: AppAuth,
 ) : ViewModel() {
-    private val cached = repository
+
+    val data: Flow<PagingData<Post>>  = repository
         .data
         .cachedIn(viewModelScope)
-
-    val data: Flow<PagingData<Post>> = auth.authStateFlow
-        .flatMapLatest { (myId, _) ->
-            cached.map { pagingData ->
-                pagingData.map { post ->
-                    post.copy(ownedByMe = post.authorId == myId)
-                }
-            }
-        }
 
     private val _dataState = MutableLiveData<FeedModelState>()
     val dataState: LiveData<FeedModelState>

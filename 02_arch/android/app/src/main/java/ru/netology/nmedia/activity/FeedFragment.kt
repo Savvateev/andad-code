@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -20,11 +21,13 @@ import ru.netology.nmedia.adapter.OnInteractionListener
 import ru.netology.nmedia.adapter.PostsAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 @AndroidEntryPoint
 class FeedFragment : Fragment() {
-    private val viewModel: PostViewModel by activityViewModels()
+    private val postViewModel: PostViewModel by activityViewModels()
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,15 +38,15 @@ class FeedFragment : Fragment() {
 
         val adapter = PostsAdapter(object : OnInteractionListener {
             override fun onEdit(post: Post) {
-                viewModel.edit(post)
+                postViewModel.edit(post)
             }
 
             override fun onLike(post: Post) {
-                viewModel.likeById(post.id)
+                postViewModel.likeById(post.id)
             }
 
             override fun onRemove(post: Post) {
-                viewModel.removeById(post.id)
+                postViewModel.removeById(post.id)
             }
 
             override fun onShare(post: Post) {
@@ -59,6 +62,9 @@ class FeedFragment : Fragment() {
             }
         })
         binding.list.adapter = adapter
+        authViewModel.data.observe(viewLifecycleOwner) {
+            adapter.refresh()
+        }
 
         // Устаревший вариант
         /*
@@ -70,7 +76,7 @@ class FeedFragment : Fragment() {
         // Актуальный вариант
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.data.collectLatest(adapter::submitData)
+                postViewModel.data.collectLatest(adapter::submitData)
             }
         }
 
