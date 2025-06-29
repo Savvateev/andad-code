@@ -73,13 +73,7 @@ class StatsView @JvmOverloads constructor(
             return
         }
 
-        var startFrom = -90F
-        for ((index, datum) in data.withIndex()) {
-            val angle = 360F * datum
-            paint.color = colors.getOrNull(index) ?: randomColor()
-            canvas.drawArc(oval, startFrom, angle * progress, false, paint)
-            startFrom += angle
-        }
+        val sum = data.sum()
 
         canvas.drawText(
             "%.2f%%".format(data.sum() * 100),
@@ -87,6 +81,31 @@ class StatsView @JvmOverloads constructor(
             center.y + textPaint.textSize / 4,
             textPaint,
         )
+
+        val progressAngle = progress * 360F
+        var startFrom = -90F
+        val max = sum * 360F
+
+        if (progressAngle > max) {
+            for ((index, datum) in data.withIndex()) {
+                val angle = 360F * datum
+                paint.color = colors.getOrNull(index) ?: randomColor()
+                canvas.drawArc(oval, startFrom, angle, false, paint)
+                startFrom += angle
+            }
+            return
+        }
+
+        var filled = 0F
+        for ((index, datum) in data.withIndex()) {
+            val angle = 360F * datum
+            paint.color = colors.getOrNull(index) ?: randomColor()
+            canvas.drawArc(oval, startFrom, progressAngle - filled, false, paint)
+            startFrom += angle
+            filled += angle
+            if (filled > progressAngle) return
+        }
+
     }
 
     private fun update() {
@@ -101,7 +120,7 @@ class StatsView @JvmOverloads constructor(
                 progress = anim.animatedValue as Float
                 invalidate()
             }
-            duration = 500
+            duration = 5000
             interpolator = LinearInterpolator()
         }.also {
             it.start()

@@ -25,7 +25,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
             0.25F,
             0.25F,
             0.25F,
-            0.25F,
+            //0.25F,
         )
 
 
